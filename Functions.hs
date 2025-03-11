@@ -3,6 +3,7 @@ import qualified Data.ByteString as BS
 import Data.Char
 import Data.Serialize
 import GHC.Word
+import Text.Printf (printf)
 
 f :: String -> IO()
 f str = print $ show (SHA1.hash (BS.pack $ map fromIntegral $ list str []))
@@ -11,7 +12,10 @@ hash :: IO ()
 hash = do
     putStrLn "Type a string to hash with SHA-1 algorythm:"
     str <- BS.getLine
-    print $ show $ SHA1.hash str
+    print $ toHex $ SHA1.hash str
+
+toHex :: BS.ByteString -> String
+toHex bytes = BS.unpack bytes >>= printf "%02x"
 
 meyn = print $ SHA1.hash (BS.pack $ head $ perms' [1,2,3,4,5])
 
