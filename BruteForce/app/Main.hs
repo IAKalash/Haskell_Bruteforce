@@ -1,32 +1,10 @@
-import Crypto.Hash.SHA1 (hashlazy)
-import qualified Data.ByteString as Strict
-import Text.Printf (printf)
-import qualified Data.ByteString.Char8 as C
-
--- TODO: 
-    --hashing your password
-    --реализация библиотечных функций
-    --Digital only password as a 10-kernel increment !!!!!!!!!!!!!!!!!!!!!!!
-    --Stack overflow if size > 7 (with digits) (maybe $!)
-        --digits - up to 8 (if password starts from 1)
-        --digi-letters - up to 5
-    --Unknown size
-    --Otherwises for questions
-    --make a project
-
-
-digits = "0123456789"
-alphabet = "abcdefghijklmnopqrstuvwxyz"
-upperAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-symbols = "-_+=()*&^%$#@!~`'\";:[]{}/?.>,<|\\"
+module Main (main) where
+import Lib
 
 main :: IO()
 main = do
     putStrLn "Shall we help you to hash your password? <Yes/No> \n(You can also use any online coder)"
-    choise <- getLine
-    case choise of
-        "Yes" -> hash
-        "No" -> putStrLn "Ok, hope you have a hash"
+    hashPass
     putStrLn "Print your hash in SHA-1"
     hash <- getLine
     putStrLn "Please, answer our questions honestly, It will help us a lot (Answer <Yes> or <No>)"
@@ -59,31 +37,11 @@ main = do
                         "No" -> print $ "Your password is: " ++ bruteForce hash (digits ++ alphabet) (read size :: Int) -----------------------------------------
                 "No" -> print $ "Your password is:" ++ bruteForce hash digits (read size :: Int)
 
-bruteForce :: String -> String -> Int -> String
-bruteForce hash list size = check hash (permutations list size)
-
-check :: String -> [String] -> String
-check hash (x:xs) | hash == toHex (hashlazy $ C.fromStrict $ C.pack x) = x
-                  | otherwise = check hash xs
-check hash [] = "Hash not found :-<"
-
-toHex :: Strict.ByteString -> String
-toHex bytes = Strict.unpack bytes >>= printf "%02x"
-
-permutations :: Eq a => [a] -> Int -> [[a]]
-permutations list 1 = split list
-permutations list n = add (permutations list (n - 1)) list
-
-split :: [a] -> [[a]]
-split [x] = [[x]]
-split (x:xs) = [x] : split xs
-
-add :: [[a]] -> [a] -> [[a]]
-add list [x] = map (x:) list
-add list (x : xs) = map (x:) list ++ add list xs
-
-hash :: IO ()
-hash = do
-  putStrLn "Print your password:"
-  str <- getLine
-  putStrLn $ "Your hash is: " ++ toHex (hashlazy $ C.fromStrict $ C.pack str)
+hashPass :: IO()
+hashPass = do
+    choise <- getLine
+    case choise of
+        "Yes" -> hash
+        "No" -> putStrLn "Ok, hope you have a hash"
+        _ -> do
+            putStrLn "Answer only <Yes> or <No>"

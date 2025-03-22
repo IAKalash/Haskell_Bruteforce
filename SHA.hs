@@ -7,7 +7,7 @@ import Data.ByteString (fromStrict)
 import qualified Data.ByteString.Char8 as C
 
 hashFile :: FilePath -> IO Strict.ByteString
-hashFile = fmap hashlazy . Lazy.readFile 
+hashFile = fmap hashlazy . Lazy.readFile
 
 toHex :: Strict.ByteString -> String
 toHex bytes = Strict.unpack bytes >>= printf "%02x"
@@ -19,10 +19,9 @@ test path = do
   hashFile path >>= putStrLn . toHex
   return ()
 
-
 --WORKING SHA1 with reading:
 main :: IO ()
 main = do
+  putStrLn "Print your password:"
   str <- getLine
-  putStrLn . toHex $ hashlazy $ fromStrict $ C.pack str
-  return ()
+  putStrLn $ "Your hash is:" ++ toHex (hashlazy $ fromStrict $ C.pack str)
