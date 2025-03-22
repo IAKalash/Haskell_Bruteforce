@@ -74,24 +74,6 @@ processBlock [h0, h1, h2, h3, h4] block =
       let temp = rotLeft 5 a + f t b c d + e + k t + w!!t
       in (temp, a, rotLeft 30 b, c, d)
 
--- sha1 :: String -> IO String
--- sha1 input = do
---     -- let bytes = stringToBytes input
---     -- putStrLn $ "Input bytes (in hex): " ++ concatMap (\x -> padHex2 (showHex x "")) bytes
---     let padded = padMessage bytes
---     putStrLn $ "Padded message (in hex): " ++ concatMap (\x -> padHex2 (showHex x "")) padded
---     let blocks = chunk 64 padded
---     let firstBlockWords = toWords (head blocks)
---     putStrLn $ "First block (in hex): " ++ concatMap (\x -> padHex (showHex x "") ++ " ") firstBlockWords
---     let expandedWords = expandWords firstBlockWords
---     putStrLn $ "First 5 expanded words: " ++ unwords (map (padHex . flip showHex "") (take 5 expandedWords))
---     putStrLn $ "Expanded words w[16]-w[20]: " ++ unwords (map (padHex . flip showHex "") (take 5 $ drop 16 expandedWords))
---     let finalHash = foldl processBlock initH blocks
---     return $ concatMap (\x -> padHex (showHex x "")) finalHash
---   where
---     padHex s = replicate (8 - length s) '0' ++ s
---     padHex2 s = replicate (2 - length s) '0' ++ s
--- -- Тест
 sha1 :: String -> String
 sha1 input = concatMap (\x -> padHex (showHex x "")) finalHash
   where
