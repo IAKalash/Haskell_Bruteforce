@@ -1,11 +1,12 @@
-import Crypto.Hash.SHA1 (hashlazy)
-import qualified Data.ByteString as Strict
-import Text.Printf (printf)
-import qualified Data.ByteString.Char8 as C
+import SHA1
 import Text.Regex.Posix ( (=~) )
 
+import Control.Concurrent
+import Control.DeepSeq
+import Control.Parallel.Strategies
+
+
 -- TODO: 
-    --реализация библиотечных функций
     --Digital only password as a 10-core increment !!!!!!!!!!!!!!!!!!!!!!!
     --Stack overflow if size > 7 (with digits) (maybe $!)
         --digits - up to 8 (if password starts from 1)
@@ -32,14 +33,15 @@ bruteForce :: String -> String -> Int -> String
 bruteForce hash list size = check hash (permutations list size)
 
 check :: String -> [String] -> String
-check hash (x:xs) | hash == toHex (hashlazy $ C.fromStrict $ C.pack x) = x
+check hash (x:xs) | hash == sha1 x = x
                   | otherwise = check hash xs
 check hash [] = "Hash not found :-<"
 
-toHex :: Strict.ByteString -> String
-toHex bytes = Strict.unpack bytes >>= printf "%02x"
+len :: [a] -> Int
+len = foldr (\ x -> (+) 1) 0
 
 permutations :: Eq a => [a] -> Int -> [[a]]
+permutations list 0 = []
 permutations list 1 = split list
 permutations list n = add (permutations list (n - 1)) list
 
@@ -54,13 +56,9 @@ add list (x : xs) = map (x:) list ++ add list xs
 digitalPassword :: String -> Int -> String
 digitalPassword hash n = do
     let res = bruteForce hash digits n
-    case res of 
+    case res of
         "Hash not found :-<" -> digitalPassword hash (n + 1)
         _ -> res
-
-digitalPassword' :: String -> Int -> Int
-digitalPassword' hash n | hash == toHex (hashlazy $ C.fromStrict $ C.pack $ show n) = n
-                       | otherwise = digitalPassword' hash (n + 1)
 
 ifHash :: IO()
 ifHash = do
@@ -75,7 +73,7 @@ makeHash :: IO ()
 makeHash = do
   putStrLn "Print your password:"
   str <- getLine
-  putStrLn $ "Your hash is: " ++ toHex (hashlazy $ C.fromStrict $ C.pack str)
+  putStrLn $ "Your hash is: " ++ sha1 str
 
 checkHash :: IO String
 checkHash = do
@@ -94,7 +92,7 @@ questions hash = do
     case choise of
         "No" -> do
             putStrLn "Ok, bruteforcing digital passwords..."
-            print $ "Your password is:" ++ show (digitalPassword hash 1)
+            print $ "Your password is:" ++ digitalPassword hash 1
         "Yes" -> do
             putStrLn "What is the lenght of your password?"
             size <- pasSize
@@ -147,7 +145,7 @@ questions22 hash size = do
         "Yes" -> do
             putStrLn "Are there any CAPITAL letters?"
             questions221 hash size
-        "No" -> print $ "Your password is:" ++ bruteForce hash digits (read size :: Int)
+        "No" -> print $ "Your password is: " ++ bruteForce hash digits (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions22 hash size

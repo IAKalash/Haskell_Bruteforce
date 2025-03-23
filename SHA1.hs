@@ -1,3 +1,5 @@
+module SHA1 where
+
 import Data.Word (Word32, Word8)
 import Data.Bits (Bits, rotate, xor, (.&.), (.|.), complement, shiftL)
 import Data.Char (ord)
@@ -17,8 +19,8 @@ k t
 
 -- Логические функции F
 f :: Int -> Word32 -> Word32 -> Word32 -> Word32
-f t b c d 
-    | t < 20    = (b .&. c) .|. ((complement b) .&. d)
+f t b c d
+    | t < 20    = (b .&. c) .|. (complement b .&. d)
     | t < 40    = b `xor` c `xor` d
     | t < 60    = (b .&. c) .|. (b .&. d) .|. (c .&. d)
     | otherwise = b `xor` c `xor` d
@@ -34,7 +36,7 @@ chunk n xs = take n xs : chunk n (drop n xs)
 
 -- Дополнение сообщения
 padMessage :: [Word8] -> [Word8]
-padMessage msg = 
+padMessage msg =
     let len = fromIntegral (length msg) * 8
         padLen = ((448 - (len + 8) `mod` 512) `mod` 512) `div` 8
         padding = replicate padLen 0
