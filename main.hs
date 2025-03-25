@@ -1,11 +1,6 @@
 import SHA1
 import Text.Regex.Posix ( (=~) )
 
-import Control.Concurrent
-import Control.DeepSeq
-import Control.Parallel.Strategies
-
-
 -- TODO: 
     --Digital only password as a 10-core increment !!!!!!!!!!!!!!!!!!!!!!!
     --Stack overflow if size > 7 (with digits) (maybe $!)
