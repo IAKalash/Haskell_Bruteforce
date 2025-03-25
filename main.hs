@@ -1,5 +1,7 @@
 import SHA1
 import Text.Regex.Posix ( (=~) )
+import Control.Parallel.Strategies
+import Control.Parallel (par)
 
 -- TODO: 
     --Digital only password as a 10-core increment !!!!!!!!!!!!!!!!!!!!!!!
@@ -24,7 +26,13 @@ main = do
     questions hash
 
 bruteForce :: String -> String -> Int -> String
-bruteForce hash list size = check hash (permutations list size)
+-- bruteForce hash list size = check hash (permutations list size)
+bruteForce hash list size = do
+    let num = len list ^ (size - 1)
+    let (a,b) = splitAt (num `div` 2) (permutations list size)
+    let (a1,a2) = splitAt (num `div` 4) a
+    let (b1,b2) = splitAt (num `div` 4) b
+    check hash a1 `par` check hash a2 `par` check hash b1 `par` check hash b2
 
 check :: String -> [String] -> String
 check hash (x:xs) | hash == sha1 x = x
@@ -128,8 +136,8 @@ questions02 :: String -> String -> IO()
 questions02 hash size = do
     ans <- getLine
     case ans of
-        "Yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet) (read size :: Int) 
-        "No" -> print $ "Your password is: " ++ bruteForce hash alphabet (read size :: Int) 
+        "Yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet) (read size :: Int)
+        "No" -> print $ "Your password is: " ++ bruteForce hash alphabet (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions02 hash size
@@ -150,8 +158,8 @@ questions010 :: String -> String -> IO()
 questions010 hash size = do
     ans <- getLine
     case ans of
-        "Yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet ++symbols) (read size :: Int) 
-        "No" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ symbols) (read size :: Int) 
+        "Yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet ++symbols) (read size :: Int)
+        "No" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ symbols) (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions010 hash size
