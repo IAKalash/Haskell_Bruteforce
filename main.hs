@@ -1,17 +1,11 @@
 import SHA1
 import Text.Regex.Posix ( (=~) )
 
-import Control.Concurrent
-import Control.DeepSeq
-import Control.Parallel.Strategies
-
-
 -- TODO: 
     --Digital only password as a 10-core increment !!!!!!!!!!!!!!!!!!!!!!!
     --Stack overflow if size > 7 (with digits) (maybe $!)
         --digits - up to 8 (if password starts from 1)
         --digi-letters - up to 5
-    --Otherwises for questions
     --make a project
 
 digits = "0123456789"
@@ -96,11 +90,71 @@ questions hash = do
         "Yes" -> do
             putStrLn "What is the lenght of your password?"
             size <- pasSize
-            putStrLn "Are there any special symbols (as . , - + etc.)?"
-            questionsPt2 hash size
+            putStrLn "Are there any digits?"
+            questionsPt1 hash size
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions hash
+
+questionsPt1 :: String -> String -> IO()
+questionsPt1 hash size = do
+    ans <- getLine
+    case ans of
+        "Yes" -> do
+            putStrLn "Are there any special symbols (as . , - + etc.)?"
+            questionsPt2 hash size
+        "No" -> do
+            putStrLn "Are there any special symbols (as . , - + etc.)?"
+            questions0 hash size
+        _ -> do
+            putStrLn "Answer <Yes> or <No> (without brackets)"
+            questionsPt1 hash size
+
+questions0 :: String -> String -> IO()
+questions0 hash size = do
+    ans <- getLine
+    case ans of
+        "Yes" -> do
+            putStrLn "Are there any letters?"
+            questions01 hash size
+        "No" -> do
+            putStrLn "Are there any CAPITAL letters?"
+            questions02 hash size
+        _ -> do
+            putStrLn "Answer <Yes> or <No> (without brackets)"
+            questions0 hash size
+
+questions02 :: String -> String -> IO()
+questions02 hash size = do
+    ans <- getLine
+    case ans of
+        "Yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet) (read size :: Int) 
+        "No" -> print $ "Your password is: " ++ bruteForce hash alphabet (read size :: Int) 
+        _ -> do
+            putStrLn "Answer <Yes> or <No> (without brackets)"
+            questions02 hash size
+
+questions01 :: String -> String -> IO()
+questions01 hash size = do
+    ans <- getLine
+    case ans of
+        "Yes" -> do
+            putStrLn "Are there any CAPITAL letters?"
+            questions010 hash size
+        "No" -> print $ "Your password is: " ++ bruteForce hash symbols (read size :: Int)
+        _ -> do
+            putStrLn "Answer <Yes> or <No> (without brackets)"
+            questions01 hash size
+
+questions010 :: String -> String -> IO()
+questions010 hash size = do
+    ans <- getLine
+    case ans of
+        "Yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet ++symbols) (read size :: Int) 
+        "No" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ symbols) (read size :: Int) 
+        _ -> do
+            putStrLn "Answer <Yes> or <No> (without brackets)"
+            questions010 hash size
 
 pasSize :: IO String
 pasSize = do
