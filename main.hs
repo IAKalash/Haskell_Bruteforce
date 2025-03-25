@@ -3,12 +3,10 @@ import Text.Regex.Posix ( (=~) )
 import Control.Parallel.Strategies
 import Control.Parallel (par)
 
--- TODO: 
-    --Digital only password as a 10-core increment !!!!!!!!!!!!!!!!!!!!!!!
-    --Stack overflow if size > 7 (with digits) (maybe $!)
-        --digits - up to 8 (if password starts from 1)
-        --digi-letters - up to 5
-    --make a project
+--123ab - 8s
+--12345678 - 1m47s
+-- ghc -O2 -threaded main.hs
+-- ./main.exe -RTS -N<cores>
 
 digits = "0123456789"
 alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -24,6 +22,9 @@ main = do
     putStrLn "Please, answer our questions honestly, It will help us a lot (Answer <Yes> or <No>)"
     putStrLn "If you don't want to answer type <No> and we'll bruteforce only digital passwords"
     questions hash
+    putStrLn "Press Enter to close the terminal"
+    exit <- getLine
+    print exit
 
 bruteForce :: String -> String -> Int -> String
 -- bruteForce hash list size = check hash (permutations list size)
@@ -32,7 +33,12 @@ bruteForce hash list size = do
     let (a,b) = splitAt (num `div` 2) (permutations list size)
     let (a1,a2) = splitAt (num `div` 4) a
     let (b1,b2) = splitAt (num `div` 4) b
-    check hash a1 `par` check hash a2 `par` check hash b1 `par` check hash b2
+    let (a3,a4) = splitAt (num `div` 4) a1
+    let (b3,b4) = splitAt (num `div` 4) b1
+    let (a5,a6) = splitAt (num `div` 4) a2
+    let (b5,b6) = splitAt (num `div` 4) b2
+    check hash a3 `par` check hash a4 `par` check hash b3 `par` check hash b4 
+        `par` check hash a5 `par` check hash a6 `par` check hash b5 `par` check hash b6
 
 check :: String -> [String] -> String
 check hash (x:xs) | hash == sha1 x = x
@@ -94,7 +100,7 @@ questions hash = do
     case choise of
         "No" -> do
             putStrLn "Ok, bruteforcing digital passwords..."
-            print $ "Your password is:" ++ digitalPassword hash 1
+            print $ "Your password is: " ++ digitalPassword hash 1
         "Yes" -> do
             putStrLn "What is the lenght of your password?"
             size <- pasSize
