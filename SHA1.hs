@@ -78,19 +78,30 @@ processBlock [h0, h1, h2, h3, h4] block =
       let temp = rotLeft 5 a + f t b c d + e + k t + w!!t
       in (temp, a, rotLeft 30 b, c, d)
 
-addHashes :: [Word32] -> [Word32] -> [Word32]
-addHashes [h0, h1, h2, h3, h4] [dh0, dh1, dh2, dh3, dh4] =
-  [h0 + dh0, h1 + dh1, h2 + dh2, h3 + dh3, h4 + dh4]
+-- addHashes :: [Word32] -> [Word32] -> [Word32]
+-- addHashes [h0, h1, h2, h3, h4] [dh0, dh1, dh2, dh3, dh4] =
+--   [h0 + dh0, h1 + dh1, h2 + dh2, h3 + dh3, h4 + dh4]
 
--- Параллельная обработка блоков
+-- -- Параллельная обработка блоков
+-- sha1 :: String -> String
+-- sha1 input = concatMap (\x -> padHex (showHex x "")) finalHash
+--   where
+--     bytes = stringToBytes input
+--     padded = padMessage bytes
+--     blocks = chunk 64 padded
+--     -- Параллельно вычисляем дельты для каждого блока
+--     deltas = map (processBlock initH) blocks `using` parList rdeepseq
+--     -- Последовательно складываем дельты с начальным значением
+--     finalHash = foldl addHashes initH deltas
+--     padHex s = replicate (8 - length s) '0' ++ s
+
+
 sha1 :: String -> String
 sha1 input = concatMap (\x -> padHex (showHex x "")) finalHash
   where
     bytes = stringToBytes input
     padded = padMessage bytes
     blocks = chunk 64 padded
-    -- Параллельно вычисляем дельты для каждого блока
-    deltas = map (processBlock initH) blocks `using` parList rdeepseq
-    -- Последовательно складываем дельты с начальным значением
-    finalHash = foldl addHashes initH deltas
+    finalHash = foldl processBlock initH blocks
     padHex s = replicate (8 - length s) '0' ++ s
+    padHex2 s = replicate (2 - length s) '0' ++ s
