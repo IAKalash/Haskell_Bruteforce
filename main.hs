@@ -2,11 +2,12 @@ import SHA1
 import Text.Regex.Posix ( (=~) )
 import Control.Parallel.Strategies
 import Control.Parallel (par)
+import Data.Char (toLower) 
 
 --123ab - 8s
 --12345678 - 1m47s
 -- ghc -O2 -threaded main.hs
--- ./main.exe -RTS -N<cores>
+-- ./main.exe +RTS -N<cores> -s
 
 digits = "0123456789"
 alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -28,17 +29,30 @@ main = do
 
 bruteForce :: String -> String -> Int -> String
 -- bruteForce hash list size = check hash (permutations list size)
-bruteForce hash list size = do
+bruteForce hash list size | size == 1 = check hash (permutations list size)
+                          | otherwise = do
     let num = len list ^ (size - 1)
     let (a,b) = splitAt (num `div` 2) (permutations list size)
     let (a1,a2) = splitAt (num `div` 4) a
     let (b1,b2) = splitAt (num `div` 4) b
-    let (a3,a4) = splitAt (num `div` 4) a1
-    let (b3,b4) = splitAt (num `div` 4) b1
-    let (a5,a6) = splitAt (num `div` 4) a2
-    let (b5,b6) = splitAt (num `div` 4) b2
+    let (a3,a4) = splitAt (num `div` 8) a1
+    let (b3,b4) = splitAt (num `div` 8) b1
+    let (a5,a6) = splitAt (num `div` 8) a2
+    let (b5,b6) = splitAt (num `div` 8) b2
+    -- let (a10,a11) = splitAt (num `div` 16) a3
+    -- let (b10,b11) = splitAt (num `div` 16) b3
+    -- let (a12,a13) = splitAt (num `div` 16) a4
+    -- let (b12,b13) = splitAt (num `div` 16) b4
+    -- let (a14,a15) = splitAt (num `div` 16) a5
+    -- let (b14,b15) = splitAt (num `div` 16) b5
+    -- let (a16,a17) = splitAt (num `div` 16) a6
+    -- let (b16,b17) = splitAt (num `div` 16) b6
     check hash a3 `par` check hash a4 `par` check hash b3 `par` check hash b4 
         `par` check hash a5 `par` check hash a6 `par` check hash b5 `par` check hash b6
+    -- check hash a10 `par` check hash a11 `par` check hash b10 `par` check hash b11 
+    --     `par` check hash a12 `par` check hash a13 `par` check hash b12 `par` check hash b13
+    --     `par` check hash a14 `par` check hash a15 `par` check hash b14 `par` check hash b15
+    --     `par` check hash a16 `par` check hash a17 `par` check hash b16 `par` check hash b17
 
 check :: String -> [String] -> String
 check hash (x:xs) | hash == sha1 x = x
@@ -71,9 +85,9 @@ digitalPassword hash n = do
 ifHash :: IO()
 ifHash = do
     choise <- getLine
-    case choise of
-        "Yes" -> makeHash
-        "No" -> putStrLn "Ok, hope you have a hash"
+    case map toLower choise of
+        "yes" -> makeHash
+        "no" -> putStrLn "Ok, hope you have a hash"
         _ -> do putStrLn "Please, answer <Yes> or <No>"
                 ifHash
 
@@ -97,11 +111,11 @@ checkHash = do
 questions :: String -> IO()
 questions hash = do
     choise <- getLine
-    case choise of
-        "No" -> do
+    case map toLower choise of
+        "no" -> do
             putStrLn "Ok, bruteforcing digital passwords..."
             print $ "Your password is: " ++ digitalPassword hash 1
-        "Yes" -> do
+        "yes" -> do
             putStrLn "What is the lenght of your password?"
             size <- pasSize
             putStrLn "Are there any digits?"
@@ -113,11 +127,11 @@ questions hash = do
 questionsPt1 :: String -> String -> IO()
 questionsPt1 hash size = do
     ans <- getLine
-    case ans of
-        "Yes" -> do
+    case map toLower ans of
+        "yes" -> do
             putStrLn "Are there any special symbols (as . , - + etc.)?"
             questionsPt2 hash size
-        "No" -> do
+        "no" -> do
             putStrLn "Are there any special symbols (as . , - + etc.)?"
             questions0 hash size
         _ -> do
@@ -127,11 +141,11 @@ questionsPt1 hash size = do
 questions0 :: String -> String -> IO()
 questions0 hash size = do
     ans <- getLine
-    case ans of
-        "Yes" -> do
+    case map toLower ans of
+        "yes" -> do
             putStrLn "Are there any letters?"
             questions01 hash size
-        "No" -> do
+        "no" -> do
             putStrLn "Are there any CAPITAL letters?"
             questions02 hash size
         _ -> do
@@ -141,9 +155,9 @@ questions0 hash size = do
 questions02 :: String -> String -> IO()
 questions02 hash size = do
     ans <- getLine
-    case ans of
-        "Yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet) (read size :: Int)
-        "No" -> print $ "Your password is: " ++ bruteForce hash alphabet (read size :: Int)
+    case map toLower ans of
+        "yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet) (read size :: Int)
+        "no" -> print $ "Your password is: " ++ bruteForce hash alphabet (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions02 hash size
@@ -151,11 +165,11 @@ questions02 hash size = do
 questions01 :: String -> String -> IO()
 questions01 hash size = do
     ans <- getLine
-    case ans of
-        "Yes" -> do
+    case map toLower ans of
+        "yes" -> do
             putStrLn "Are there any CAPITAL letters?"
             questions010 hash size
-        "No" -> print $ "Your password is: " ++ bruteForce hash symbols (read size :: Int)
+        "no" -> print $ "Your password is: " ++ bruteForce hash symbols (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions01 hash size
@@ -163,9 +177,9 @@ questions01 hash size = do
 questions010 :: String -> String -> IO()
 questions010 hash size = do
     ans <- getLine
-    case ans of
-        "Yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet ++symbols) (read size :: Int)
-        "No" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ symbols) (read size :: Int)
+    case map toLower ans of
+        "yes" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ upperAlphabet ++symbols) (read size :: Int)
+        "no" -> print $ "Your password is: " ++ bruteForce hash (alphabet ++ symbols) (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions010 hash size
@@ -173,21 +187,21 @@ questions010 hash size = do
 pasSize :: IO String
 pasSize = do
     size <- getLine
-    if size =~ "[123456789]+"
+    if size =~ "[123456789][0123456789]*"
         then return size
         else do
-            putStrLn "Incorrect or too big size"
+            putStrLn "Incorrect size"
             putStrLn "print a number"
             pasSize
 
 questionsPt2 :: String -> String -> IO()
 questionsPt2 hash size = do
     ans <- getLine
-    case ans of
-        "Yes" -> do
+    case map toLower ans of
+        "yes" -> do
             putStrLn "Are there any letters?"
             questions21 hash size
-        "No" -> do
+        "no" -> do
             putStrLn "Are there any letters?"
             questions22 hash size
         _ -> do
@@ -197,11 +211,11 @@ questionsPt2 hash size = do
 questions21 :: String -> String -> IO()
 questions21 hash size = do
     ans2 <- getLine
-    case ans2 of
-        "Yes" -> do
+    case map toLower ans2 of
+        "yes" -> do
             putStrLn "Are there any CAPITAL letters?"
             questions211 hash size
-        "No" -> print $ "Your password is:" ++ bruteForce hash (digits ++ symbols) (read size :: Int)
+        "no" -> print $ "Your password is:" ++ bruteForce hash (digits ++ symbols) (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions21 hash size
@@ -209,11 +223,11 @@ questions21 hash size = do
 questions22 :: String -> String -> IO()
 questions22 hash size = do
     ans2 <- getLine
-    case ans2 of
-        "Yes" -> do
+    case map toLower ans2 of
+        "yes" -> do
             putStrLn "Are there any CAPITAL letters?"
             questions221 hash size
-        "No" -> print $ "Your password is: " ++ bruteForce hash digits (read size :: Int)
+        "no" -> print $ "Your password is: " ++ bruteForce hash digits (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions22 hash size
@@ -221,9 +235,9 @@ questions22 hash size = do
 questions211 :: String -> String -> IO()
 questions211 hash size = do
     ans3 <- getLine
-    case ans3 of
-        "Yes" -> print $ "Your password is: " ++ bruteForce hash (digits ++ symbols ++ alphabet ++ upperAlphabet) (read size :: Int)
-        "No" -> print $ "Your password is: " ++ bruteForce hash (digits ++ symbols ++ alphabet) (read size :: Int)
+    case map toLower ans3 of
+        "yes" -> print $ "Your password is: " ++ bruteForce hash (digits ++ symbols ++ alphabet ++ upperAlphabet) (read size :: Int)
+        "no" -> print $ "Your password is: " ++ bruteForce hash (digits ++ symbols ++ alphabet) (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions211 hash size
@@ -231,9 +245,9 @@ questions211 hash size = do
 questions221 :: String -> String -> IO()
 questions221 hash size = do
     ans3 <- getLine
-    case ans3 of
-        "Yes" -> print $ "Your password is: " ++ bruteForce hash (digits ++ alphabet ++ upperAlphabet) (read size :: Int)
-        "No" -> print $ "Your password is: " ++ bruteForce hash (digits ++ alphabet) (read size :: Int)
+    case map toLower ans3 of
+        "yes" -> print $ "Your password is: " ++ bruteForce hash (digits ++ alphabet ++ upperAlphabet) (read size :: Int)
+        "no" -> print $ "Your password is: " ++ bruteForce hash (digits ++ alphabet) (read size :: Int)
         _ -> do
             putStrLn "Answer <Yes> or <No> (without brackets)"
             questions221 hash size
