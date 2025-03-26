@@ -4,8 +4,8 @@ import Data.Word (Word32, Word8)
 import Data.Bits (Bits, rotate, xor, (.&.), (.|.), complement, shiftL)
 import Data.Char (ord)
 import Numeric (showHex)
-import Control.DeepSeq
-import Control.Parallel.Strategies
+-- import Control.DeepSeq
+-- import Control.Parallel.Strategies
 
 -- Начальные значения регистров
 initH :: [Word32]
