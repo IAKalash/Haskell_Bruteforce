@@ -2,11 +2,11 @@ import SHA1
 import Text.Regex.Posix ( (=~) )
 import Control.Parallel.Strategies
 import Control.Parallel (par)
-import Data.Char (toLower) 
+import Data.Char (toLower)
 
---123ab - 8s
+--123ab - 12s
 --12345678 - 1m47s
--- ghc -O2 -threaded main.hs
+-- ghc -O2 -threaded main.hs +RTS -N16
 -- ./main.exe +RTS -N<cores> -s
 
 digits = "0123456789"
@@ -23,36 +23,18 @@ main = do
     putStrLn "Please, answer our questions honestly, It will help us a lot (Answer <Yes> or <No>)"
     putStrLn "If you don't want to answer type <No> and we'll bruteforce only digital passwords"
     questions hash
-    putStrLn "Press Enter to close the terminal"
-    exit <- getLine
-    print exit
+    -- putStrLn "Press Enter to close the terminal"
+    -- exit <- getLine
+    -- print exit
 
 bruteForce :: String -> String -> Int -> String
--- bruteForce hash list size = check hash (permutations list size)
-bruteForce hash list size | size == 1 = check hash (permutations list size)
-                          | otherwise = do
-    let num = len list ^ (size - 1)
-    let (a,b) = splitAt (num `div` 2) (permutations list size)
-    let (a1,a2) = splitAt (num `div` 4) a
-    let (b1,b2) = splitAt (num `div` 4) b
-    let (a3,a4) = splitAt (num `div` 8) a1
-    let (b3,b4) = splitAt (num `div` 8) b1
-    let (a5,a6) = splitAt (num `div` 8) a2
-    let (b5,b6) = splitAt (num `div` 8) b2
-    -- let (a10,a11) = splitAt (num `div` 16) a3
-    -- let (b10,b11) = splitAt (num `div` 16) b3
-    -- let (a12,a13) = splitAt (num `div` 16) a4
-    -- let (b12,b13) = splitAt (num `div` 16) b4
-    -- let (a14,a15) = splitAt (num `div` 16) a5
-    -- let (b14,b15) = splitAt (num `div` 16) b5
-    -- let (a16,a17) = splitAt (num `div` 16) a6
-    -- let (b16,b17) = splitAt (num `div` 16) b6
-    check hash a3 `par` check hash a4 `par` check hash b3 `par` check hash b4 
-        `par` check hash a5 `par` check hash a6 `par` check hash b5 `par` check hash b6
-    -- check hash a10 `par` check hash a11 `par` check hash b10 `par` check hash b11 
-    --     `par` check hash a12 `par` check hash a13 `par` check hash b12 `par` check hash b13
-    --     `par` check hash a14 `par` check hash a15 `par` check hash b14 `par` check hash b15
-    --     `par` check hash a16 `par` check hash a17 `par` check hash b16 `par` check hash b17
+bruteForce hash list size = 
+    let num = len list ^ size
+        partitions = chunk (num `div` 10) (permutations list size)
+        results = map (check hash) partitions `using` parList rdeepseq
+    in case filter (/= "Hash not found :-<") results of
+        (found:_) -> found
+        [] -> "Hash not found :-<"
 
 check :: String -> [String] -> String
 check hash (x:xs) | hash == sha1 x = x
@@ -76,6 +58,7 @@ add list [x] = map (x:) list
 add list (x : xs) = map (x:) list ++ add list xs
 
 digitalPassword :: String -> Int -> String
+digitalPassword hash 1 = check hash (permutations digits 1)
 digitalPassword hash n = do
     let res = bruteForce hash digits n
     case res of
