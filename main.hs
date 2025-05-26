@@ -1,13 +1,10 @@
 import SHA1
 import Text.Regex.Posix ( (=~) )
 import Control.Parallel.Strategies
-import Control.Parallel (par)
 import Data.Char (toLower)
 
---123ab - 12s
---12345678 - 1m47s
--- ghc -O2 -threaded main.hs +RTS -N16
--- ./main.exe +RTS -N<cores> -s
+-- ghc -O2 -threaded main.hs +RTS -N10
+-- ./main.exe +RTS -N10
 
 digits = "0123456789"
 alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -23,9 +20,6 @@ main = do
     putStrLn "Please, answer our questions honestly, It will help us a lot (Answer <Yes> or <No>)"
     putStrLn "If you don't want to answer type <No> and we'll bruteforce only digital passwords"
     questions hash
-    -- putStrLn "Press Enter to close the terminal"
-    -- exit <- getLine
-    -- print exit
 
 bruteForce :: String -> String -> Int -> String
 bruteForce hash list size = 
@@ -58,7 +52,8 @@ add list [x] = map (x:) list
 add list (x : xs) = map (x:) list ++ add list xs
 
 digitalPassword :: String -> Int -> String
-digitalPassword hash 1 = check hash (permutations digits 1)
+digitalPassword hash 1 | check hash (permutations digits 1) /= "Hash not found :-<" = check hash (permutations digits 1)
+                       | otherwise = digitalPassword hash 2
 digitalPassword hash n = do
     let res = bruteForce hash digits n
     case res of
