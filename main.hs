@@ -3,9 +3,6 @@ import Text.Regex.Posix ( (=~) )
 import Control.Parallel.Strategies
 import Data.Char (toLower)
 
--- ghc -O2 -threaded main.hs +RTS -N10
--- ./main.exe +RTS -N10
-
 digits = "0123456789"
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 upperAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
