@@ -1,7 +1,7 @@
 To start the bruteforce clone the repo and use
 
 ```bash
-./main.exe +RTS -N10"
+./main.exe +RTS -N10
 ``` 
 
 You can print the number of cores you're going to use after "-N".
